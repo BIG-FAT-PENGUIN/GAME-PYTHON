@@ -1,0 +1,181 @@
+import pygame
+pygame.init()
+
+win=pygame.display.set_mode((700,700))
+pygame.display.set_caption("First game")
+walkRight =[pygame.image.load('R1.png'),pygame.image.load('R2.png'),pygame.image.load('R3.png'),pygame.image.load('R4.png'),pygame.image.load('R5.png'),pygame.image.load('R6.png'),pygame.image.load('R7.png'),pygame.image.load('R8.png'),pygame.image.load('R9.png')]
+walkLeft =[pygame.image.load('L1.png'),pygame.image.load('L2.png'),pygame.image.load('L3.png'),pygame.image.load('L4.png'),pygame.image.load('L5.png'),pygame.image.load('L6.png'),pygame.image.load('L7.png'),pygame.image.load('L8.png'),pygame.image.load('L9.png')]
+bg = pygame.image.load('image2.jpg')
+char= pygame.image.load('standing.png')
+
+clock=pygame.time.Clock()
+class player(object):
+   def __init__(self, x , y, width, height):
+    self.x=x
+    self.y=y
+    self.width=width
+    self.height=height
+    self.vel=5
+    self.left=False
+    self.right=False
+    self.walkCount=0    
+    self.isJump=False
+    self.jumpCount=12
+    self.standing =True
+    self.hitbox=[self.x+20,self.y,20,60]
+    
+   def draw(self,win):
+       if self.walkCount +1 >=27:  #9 sprit eack for 3 frames
+        self.walkCount = 0
+       if not(self.standing): 
+            if self.left:
+                win.blit(walkLeft[self.walkCount//3], (self.x,self.y)) 
+                self.walkCount+=1 
+            elif self.right:
+                win.blit(walkRight[self.walkCount//3],(self.x,self.y))
+                self.walkCount+=1
+       else:
+            if self.right:
+                win.blit(walkRight[0],(self.x,self.y))
+            else:
+                win.blit(walkLeft[0],(self.x,self.y))     
+       self.hitbox =(self.x+20,self.y,25,60)
+       pygame.draw.rect(win,(0,255,0),self.hitbox,2)
+class projectile(object):
+    def __init__(self,x,y,radius,color,facing):
+        self.x=x
+        self.y=y
+        self.radius=radius
+        self.color=color
+        self.facing=facing
+        self.vel=9 * facing
+    
+    def draw(self,win):
+        
+        pygame.draw.circle(win,self.color, (self.x,self.y),self.radius)
+
+#creating class for eneny sprit
+class enemy (object): 
+    walkRight= [pygame.image.load('R1E.png'), pygame.image.load('R2E.png'),pygame.image.load('R3E.png'),pygame.image.load('R4E.png'),pygame.image.load('R5E.png'),pygame.image.load('R6E.png'),pygame.image.load('R7E.png'),pygame.image.load('R8E.png'),pygame.image.load('R9E.png'),pygame.image.load('R10E.png'),pygame.image.load('R11E.png')]
+    walkLeft= [pygame.image.load('L1E.png'), pygame.image.load('L2E.png'),pygame.image.load('L3E.png'),pygame.image.load('L4E.png'),pygame.image.load('L5E.png'),pygame.image.load('L6E.png'),pygame.image.load('L7E.png'),pygame.image.load('L8E.png'),pygame.image.load('L9E.png'),pygame.image.load('L10E.png'),pygame.image.load('L11E.png')]            
+    
+    def __init__(self, x, y, width, height,end):
+        self.x=x
+        self.y=y
+        self.width=width
+        self.height=height
+        self.end=end
+        self.vel=3
+        self.walkCount=0
+        self.path=[x ,end]
+        self.hitbox=[self.x+15,self.y+1,30,55]
+    
+    def draw(self,win):
+        self.move()
+        if self.walkCount + 1 >= 33:
+            self.walkCount = 0
+            
+        if self.vel > 0:
+           win.blit(self.walkRight[self.walkCount//3], (self.x,self.y))       #setting the image of enemy spirit to show acc to the walk count and since we have 11 images and we want to show each for 3 frames we set extreme value to 33 ,in addition to this wew have also provided with instant x and y position as an argument               
+           self.walkCount+= 1                                  #increasing walkcount to proceed to further image
+        else:
+            win.blit(self.walkLeft[self.walkCount//3], (self.x,self.y))       #setting the image of enemy spirit to show acc to the walk count and since we have 11 images and we want to show each for 3 frames we set extreme value to 33                
+            self.walkCount+= 1 
+        self.hitbox=[self.x+15,self.y+1,30,55]
+        pygame.draw.rect(win, (0,0,255),self.hitbox,2)    
+          
+    def move(self):
+        if self.vel > 0:
+            if self.x+self.vel < self.path[1] :   #checking is the sum of x position just a momnet before and the velocity going out of bounds by becoming greater than than fixed path.end
+                 self.x+=self.vel                 #if not further increasing x position value by vel
+            else:
+                self.vel=self.vel*-1              #if yes then reversing the direction of motion of enemy my multiplying self.vel by -1
+                self.walkCount=0                  #turning walkcount to zero ie starting from intial images showing change in direction of motion
+        else:
+            if self.x-self.vel >self.path[0]:     #int value inside the tuple does not change with the change in self.x 
+                 self.x+=self.vel                  #we are checking if the sum of self.x with self.vel be 
+            else:
+                self.vel=self.vel*-1
+                self.walkCount=0
+    
+    def hit(self):
+        print('hit')
+        pass         
+def game_window_redraw():
+    win.blit( bg , (0,0))      #we place background instead of filling the screen with a color so hence providing with two arguments first is background image and other is position ie (0,0) 
+     #everything we draw on pygame is a surface that we put on windows.         .We here defined color (red in form of rgb) besides windows  And then all the dimension such as height width  x and y position
+    Binod.draw(win)
+    Bhoot.draw(win)
+    for bullet in bullets:
+        bullet.draw(win)
+    pygame.display.update()
+    
+  #MAIN  
+Binod = player(40,450,64,64)
+Bhoot = enemy(100,450,64,64,450)  
+bullets=[]  
+run=True
+shoot_loop=0
+while run:    #main loop
+    clock.tick(27)  #for the response time / frame rate
+    if shoot_loop>0:
+        shoot_loop+=1       #setting delay in each bullet shooting whenever delay run out another bullet shoot out
+    if shoot_loop>3:
+        shoot_loop=0    
+    
+    for event in pygame.event.get():
+        if event.type==pygame.QUIT:   #exit condition
+            run=False
+    for bullet in bullets:
+        if bullet.y-bullet.radius<Bhoot.hitbox[1] +Bhoot.hitbox[3] and bullet.y+bullet.radius>Bhoot.hitbox[1]:
+            if bullet.x-bullet.radius<Bhoot.hitbox[0]+Bhoot.hitbox[2] and bullet.x +bullet.radius>Bhoot.hitbox[0]:
+               Bhoot.hit()
+               bullets.pop(bullets.index(bullet))  
+               
+        if bullet.x <500  and bullet.x >0:
+            bullet.x += bullet.vel
+        else:
+            bullets.pop(bullets.index(bullet))          
+    keys= pygame.key.get_pressed()
+    
+    if keys[pygame.K_SPACE] and shoot_loop==0:
+        if Binod.left:
+            facing=-1
+        else:
+            facing =1
+                
+        if len(bullets) < 5:
+            bullets.append(projectile(round(Binod.x+Binod.width//2),round(Binod.y+Binod.height//2),5,(0,0,0),facing) )         #here wwe set the round value to avoid decimal values and the value inside round is to be taken to let the bullet seem not coming out of characters body but from near it
+        shoot_loop=1
+    if keys[pygame.K_LEFT] and Binod.x>Binod.vel:
+        Binod.x-=Binod.vel
+        Binod.left =True
+        Binod.right = False
+        Binod.standing=False
+    elif keys[pygame.K_RIGHT] and Binod.x< 700-Binod.width -Binod.vel:
+        Binod.x+=Binod.vel
+        Binod.left = False
+        Binod.right = True
+        Binod.standing=False
+    else:
+        Binod.standing=True
+        Binod.walkCount = 0 
+           
+    if not (Binod.isJump):     
+        if keys[pygame.K_UP]: #changed space for jump to up key for jump
+            Binod.isJump =True  
+            Binod.right = False
+            Binod.left = False
+            Binod. walkCount = 0 
+    else:
+        if Binod.jumpCount >=-12:
+            neg=1
+            if Binod.jumpCount< 0:
+                neg =-1
+            Binod.y -= (Binod.jumpCount ** 2)*0.5*neg
+            Binod.jumpCount -=1
+        else: 
+            Binod.isJump =False
+            Binod.jumpCount =12                        
+    game_window_redraw()
+    
